@@ -11,6 +11,7 @@ import re
 import yt_dlp.networking.impersonate
 from dl_formats import get_format, get_opts, AUDIO_FORMATS
 from datetime import datetime
+from impersonate import random_impersonate_target
 
 log = logging.getLogger('ytdl')
 
@@ -222,16 +223,20 @@ class DownloadQueue:
         asyncio.create_task(self.__import_queue())
 
     def __extract_info(self, url, playlist_strict_mode):
-        return yt_dlp.YoutubeDL(params={
-            'quiet': True,
-            'no_color': True,
+        
+        params={
+            # 'quiet': True,
+            # 'no_color': True,
             'extract_flat': True,
             'ignore_no_formats_error': True,
             'noplaylist': playlist_strict_mode,
             'paths': {"home": self.config.DOWNLOAD_DIR, "temp": self.config.TEMP_DIR},
-            **({'impersonate': yt_dlp.networking.impersonate.ImpersonateTarget.from_str(self.config.YTDL_OPTIONS['impersonate'])} if 'impersonate' in self.config.YTDL_OPTIONS else {}),
+            'impersonate': random_impersonate_target(),
+            # **({'impersonate': yt_dlp.networking.impersonate.ImpersonateTarget.from_str(self.config.YTDL_OPTIONS['impersonate'])} if 'impersonate' in self.config.YTDL_OPTIONS else {}),
             **self.config.YTDL_OPTIONS,
-        }).extract_info(url, download=False)
+        }
+
+        return yt_dlp.YoutubeDL(params=params).extract_info(url, download=False)
 
     def __calc_download_path(self, quality, format, folder):
         """Calculates download path from quality, format and folder attributes.
